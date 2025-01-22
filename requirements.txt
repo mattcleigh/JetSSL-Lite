@@ -1,52 +1,52 @@
 # pytorch / deep learning
-torch
-torchdiffeq
-torchmetrics
-lightning
-normflows
-onnx
-onnxruntime
-flash_attn
+torch==2.5.1+cu124
+torchdiffeq==0.2.5
+torchmetrics==1.6.1
+lightning==2.5.0.post0
+normflows==1.7.3
+onnx==1.17.0
+onnxruntime==1.20.1
+flash_attn==2.7.3
 
 # logging
-wandb
+wandb==0.19.4
 
 # CERN/ROOT
-awkward
-uproot
-vector
-lz4
-xxhash
+awkward==2.7.2
+uproot==5.5.1
+vector==1.6.0
+lz4==4.3.3
+xxhash==3.5.0
 
 # hydra / job configuration
-omegaconf
-hydra-core
-hydra-colorlog
+omegaconf==2.3.0
+hydra-core==1.3.2
+hydra-colorlog==1.2.0
 
 # general data handling
-h5py
-tables
-pandas
-pyarrow
-parquet
-fastparquet
+h5py==3.12.1
+tables==3.10.2
+pandas==2.2.3
+pyarrow==19.0.0
+parquet==1.3.1
+fastparquet==2024.11.0
 
 # data science
-numpy
-scipy
-scikit_learn
-pykeops
+numpy==2.2.2
+scipy==1.15.1
+scikit_learn==1.6.1
+pykeops==2.2.3
 
 # plotting
-matplotlib
-seaborn
-plotly
+matplotlib==3.10.0
+seaborn==0.13.2
+plotly==5.24.1
 
 # misc
-tqdm
-Pillow
-joblib
-pytest
-rich
-rootutils
-pre-commit
+tqdm==4.67.1
+Pillow==11.1.0
+joblib==1.4.2
+pytest==8.3.4
+rich==13.9.4
+rootutils==1.0.7
+pre-commit==4.1.0

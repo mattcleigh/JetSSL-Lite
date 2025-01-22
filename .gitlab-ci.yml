@@ -8,7 +8,6 @@ stages:
   - lint
   - build
 
-
 include:
   - .gitlab/.ci-lint.yaml
   - .gitlab/.ci-build.yaml

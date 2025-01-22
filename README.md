@@ -99,6 +99,12 @@ The main configuration file that composes training is `train.yaml`.
     * `datamodule`: Chooses which datamodule to use
     * `experiment`: Overwrites any of the config values before composition
 
+### Exporting
+
+If a model has a `predict_step` method, then outputs can be saved using the `scripts/export.py` script.
+The `predict_step` method should return a dictionary of tensors with shape `(batch_size, *)`.
+These will be stacked and saved as seperate keys in an output HDF file.
+
 ### Using Hydra
 
 It is not advisable to directly change any of the set yaml files.
@@ -127,12 +133,6 @@ Alternatively, specific parameters can be set via the command line:
 ```sh
 python scripts/train.py model=ssfm encoder_config.dim=64 decoder_config.dim=64
 ```
-
-### Exporting
-
-If a model has a `predict_step` method, then outputs can be saved using the `scripts/export.py` script.
-The `predict_step` method should return a dictionary of tensors with shape `(batch_size, *)`.
-These will be stacked and saved as seperate keys in an output HDF file.
 
 ## License
 

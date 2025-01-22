@@ -5,8 +5,6 @@ build_docker: &build_docker
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   variables:
-    IMAGE_DESTINATION: $CI_REGISTRY_IMAGE:latest
+    IMAGE_DESTINATION: $CI_REGISTRY_IMAGE:$CI_COMMIT_BRANCH
   script:
     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/docker/Dockerfile --destination $IMAGE_DESTINATION --cache=true
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

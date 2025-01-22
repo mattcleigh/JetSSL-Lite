@@ -1,0 +1,57 @@
+# @package _global_
+
+# Order indicates overwriting
+defaults:
+  - _self_
+  - hydra: default
+  - callbacks: pretrain
+  - datamodule: jetclass_masked
+  - model: mpm
+  - experiment: null
+
+seed: 42 # For reproducibility
+project_name: jetssl-lite # Determines output directory path and wandb project
+network_name: test # Used for both saving and wandb
+output_dir: /srv/beegfs/scratch/groups/rodem/
+ckpt_path: null  # Checkpoint path to resume training
+weight_ckpt_path: null # Checkpoint path to load weights (but not optimizers etc)
+
+# Extra tweaks available with the new pytorch version
+precision: medium # Should use medium if on ampere gpus
+compile: null # Can set to default for faster compiles
+tags: null # Extra tags passed to the logger
+
+# COMPLETELY replaces the all config info with what is contained in ${full_path}
+# This is ideal for resuming a job, log to the same directory
+# Will also resume the logger and set the ckpt_path to the latest
+full_resume: False
+ckpt_flag: last.ckpt # Name of the checkpoint file, can use wildcards
+
+# Trainer settings
+trainer:
+  _target_: lightning.Trainer
+  precision: 16-mixed
+  max_epochs: 1
+  enable_progress_bar: True
+  gradient_clip_val: 1
+  check_val_every_n_epoch: 1
+  accelerator: auto
+  devices: 1
+  num_nodes: 1
+  default_root_dir: ${full_path}
+
+# Logger settings
+logger:
+  _target_: lightning.pytorch.loggers.wandb.WandbLogger
+  offline: False
+  id: null
+  log_model: False
+  tags: ${tags}
+  project: ${project_name}
+  name: ${network_name}
+  save_dir: ${full_path}
+  resume: ${full_resume}
+
+# Interpolated paths
+root_dir: ${oc.env:PROJECT_ROOT}
+full_path: ${output_dir}/${project_name}/${network_name}/

@@ -1,0 +1,12 @@
+# @package _global_
+defaults:
+  - hydra: default.yaml
+  - _self_
+
+# Information about which model to load and export
+output_dir: /srv/beegfs/scratch/groups/rodem/
+project_name: jetssl-lite
+network_name: setme
+
+# The path to the checkpoint. Typically best.ckpt or last.ckpt
+ckpt_flag: best.ckpt

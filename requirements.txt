@@ -1,0 +1,52 @@
+# pytorch / deep learning
+torch
+torchdiffeq
+torchmetrics
+lightning
+normflows
+onnx
+onnxruntime
+flash_attn
+
+# logging
+wandb
+
+# CERN/ROOT
+awkward
+uproot
+vector
+lz4
+xxhash
+
+# hydra / job configuration
+omegaconf
+hydra-core
+hydra-colorlog
+
+# general data handling
+h5py
+tables
+pandas
+pyarrow
+parquet
+fastparquet
+
+# data science
+numpy
+scipy
+scikit_learn
+pykeops
+
+# plotting
+matplotlib
+seaborn
+plotly
+
+# misc
+tqdm
+Pillow
+joblib
+pytest
+rich
+rootutils
+pre-commit

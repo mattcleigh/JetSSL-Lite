@@ -1,0 +1,18 @@
+_target_: src.data.mappable.MapModule
+train_path: /srv/fast/share/rodem/btag/train.h5
+val_path: /srv/fast/share/rodem/btag/validate.h5
+test_path: /srv/fast/share/rodem/btag/test.h5
+num_csts : 128
+n_classes: 3
+num_workers: 2
+batch_size: 128
+pin_memory: True
+transforms:
+  - _target_: src.data.preprocessing.preprocess_batch
+    _partial_: True
+    cst_fn:
+      _target_: joblib.load
+      filename: ${root_dir}/resources/cst_quantiles.joblib
+    jet_fn:
+      _target_: joblib.load
+      filename: ${root_dir}/resources/jet_quantiles.joblib

@@ -49,7 +49,7 @@ class JetGPT(LightningModule):
         self.cst_id_emb = nn.Embedding(self.vocab_size, self.encoder.dim)
 
         # Initialise the task heads - +1 output for the unique end-token
-        self.cst_head = nn.Linear(self.encoder.dim, self.vocab_size + 1)
+        self.cst_head = MLP(self.encoder.dim, self.vocab_size + 1, **embed_config)
 
         # The start token
         self.start_token = nn.Parameter(T.randn(self.encoder.dim))

@@ -22,7 +22,7 @@ def main():
     data = MapDataset(
         file_path="/srv/fast/share/rodem/JetClassH5/train_100M_combined.h5",
         num_jets=2_000_000,  # Roughtly 80M constituents
-        num_csts=128,
+        num_csts=32,
     )
 
     log.info("Loading pure arrays of the constituents")

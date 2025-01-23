@@ -2,7 +2,7 @@ _target_: src.data.streamable.StreamModule
 train_path: /srv/fast/share/rodem/JetClassH5/train_100M_combined.h5
 val_path: /srv/fast/share/rodem/JetClassH5/val_5M_combined.h5
 test_path: /srv/fast/share/rodem/JetClassH5/test_5M_combined.h5
-num_csts : 128
+num_csts : 32
 n_classes: 10
 num_workers: 2
 batch_size: 1000

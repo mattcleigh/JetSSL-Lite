@@ -2,7 +2,7 @@ _target_: src.data.mappable.MapModule
 train_path: /srv/fast/share/rodem/btag/train.h5
 val_path: /srv/fast/share/rodem/btag/validate.h5
 test_path: /srv/fast/share/rodem/btag/test.h5
-num_csts : 128
+num_csts : 32
 n_classes: 3
 num_workers: 2
 batch_size: 1000

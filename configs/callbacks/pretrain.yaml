@@ -13,6 +13,7 @@ activation_monitor:
     - .*\.sa.fn$
     - .*\.ca.fn$
     - .*\.ff.fn$
+    - .*\.gate$
     - .*encoder.layers\.\d+$
     - .*decoder.layers\.\d+$
   param_regex:

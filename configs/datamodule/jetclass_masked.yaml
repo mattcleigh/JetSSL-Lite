@@ -19,3 +19,8 @@ transforms:
     jet_fn:
       _target_: joblib.load
       filename: ${root_dir}/resources/jet_quantiles.joblib
+  - _target_: src.data.preprocessing.tokenize_batch
+    _partial_: True
+    token_fn:
+      _target_: torch.load
+      f: ${root_dir}/resources/kmeans.pkl

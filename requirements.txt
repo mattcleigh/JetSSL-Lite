@@ -8,6 +8,10 @@ onnx==1.17.0
 onnxruntime==1.20.1
 flash_attn==2.7.3
 
+# clustering
+cupy-cuda12x==13.3.0
+torchpq==0.3.0.6
+
 # logging
 wandb==0.19.4
 

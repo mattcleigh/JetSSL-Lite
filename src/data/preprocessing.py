@@ -3,6 +3,19 @@ import torch as T
 from sklearn.base import BaseEstimator
 
 
+def tokenize_batch(
+    jet_dict: dict[T.Tensor],
+    token_fn: BaseEstimator,
+) -> dict:
+    """Add token versions of the constituents to the jet_dict."""
+    csts = jet_dict["csts"]
+    mask = jet_dict["mask"]
+    out = token_fn.predict(csts[mask].T.contiguous()).long()
+    jet_dict["tokens"] = T.zeros(mask.shape, dtype=T.long)
+    jet_dict["tokens"][mask] = out
+    return jet_dict
+
+
 def preprocess_batch(
     jet_dict: dict[T.Tensor],
     cst_fn: BaseEstimator,

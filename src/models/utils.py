@@ -46,13 +46,14 @@ class JetBackbone(nn.Module):
         cst_id_emb: nn.Module,
         jet_emb: nn.Module,
         encoder: Transformer,
+        causal: bool = False,
     ) -> None:
         super().__init__()
         self.cst_emb = cst_emb
         self.cst_id_emb = cst_id_emb
         self.jet_emb = jet_emb
         self.encoder = encoder
-
+        self.causal = causal
         self.dim = encoder.dim
         self.outp_dim = encoder.outp_dim
 
@@ -66,6 +67,6 @@ class JetBackbone(nn.Module):
         """Pass through the complete backbone."""
         csts = self.cst_emb(csts) + self.cst_id_emb(csts_id)
         jets = self.jet_emb(jets)
-        x = self.encoder(csts, mask=mask, ctxt=jets)
+        x = self.encoder(csts, mask=mask, ctxt=jets, causal=self.causal)
         new_mask = self.encoder.get_combined_mask(mask)  # Registers
         return x, new_mask

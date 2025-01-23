@@ -11,8 +11,9 @@
 
 </div>
 
-This is a minimal implementation of the paper [Is Tokenization Needed for Masked Particle Modelling?](https://arxiv.org/html/2409.12589v2).
-It is a stripped-down and reduced version of the [original repo](https://github.com/mattcleigh/jetssl), which still had older code used in testing and development.
+The goal of this project is to test out various self-supervised / unsupervised pretraining strategies for high energy physics jets. 
+It represents a minimal implementation of the paper [Is Tokenization Needed for Masked Particle Modelling?](https://arxiv.org/html/2409.12589v2).
+It is also a stripped-down and reduced version of the [original repo](https://github.com/mattcleigh/jetssl), which still had older code used in testing and development.
 
 This repo uses PyTorch and Lightning to facilitate training and evaluation of the model, Hydra for configuration management, and Weights and Biases for logging.
 

@@ -99,6 +99,15 @@ The main configuration file that composes training is `train.yaml`.
     * `datamodule`: Chooses which datamodule to use
     * `experiment`: Overwrites any of the config values before composition
 
+#### Training sets
+
+There are two main classes for the datasets: `StreamDataset` and `MapDataset`, which also have corresponding datamodules.
+* The `StreamDataset` is used for the JetClass dataset, which is too large to fit into memory and must be streamed from disk.
+For speed, the `StreamDataset` `__getitem__` method returns a full batch slice from the HDF file.
+One downside is that the dataset is not shuffled between epochs, but this is not too much of an issue due to its size.
+* The `MapDataset` is used for the Btagging dataset, which is small enough to fit into memory.
+This is a more traditional PyTorch dataset, which can be shuffled between epochs.
+
 ### Exporting
 
 If a model has a `predict_step` method, then outputs can be saved using the `scripts/export.py` script.

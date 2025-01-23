@@ -20,6 +20,17 @@ decoder_config:
   num_layers: 6
   pack_inputs: True # Much faster training but requires half precision
 
+probe_head:
+  _target_: mltools.mltools.transformers.ClassAttentionPooling
+  _partial_: true
+  num_layers: 2
+  dim: 128
+  layer_config:
+    attn_config:
+      num_heads: 4
+    ff_config:
+      mult: 1
+
 optimizer:
   _target_: mltools.mltools.optimisers.AdamWS
   _partial_: True

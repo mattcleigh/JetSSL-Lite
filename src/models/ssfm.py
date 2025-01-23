@@ -27,7 +27,8 @@ class SetToSetFlowModelling(LightningModule):
         decoder_config: dict,
         optimizer: partial,
         scheduler: dict,
-        probe_every: int = 100,
+        probe_head: partial,
+        probe_every: int = 50,
     ) -> None:
         super().__init__()
         self.save_hyperparameters(logger=False)
@@ -51,7 +52,6 @@ class SetToSetFlowModelling(LightningModule):
         )
         self.n_reg = self.encoder.num_registers
         self.dim = self.encoder.dim
-        self.outp_dim = self.encoder.outp_dim
 
         # The embedding layers
         self.cst_emb = MLP(self.cst_dim, self.encoder.dim, **embed_config)
@@ -73,8 +73,8 @@ class SetToSetFlowModelling(LightningModule):
         self.encoder.unpack_output = False
         self.decoder.unpack_output = False
 
-        # Simple linear probe for monitoring accuracy
-        self.probe = nn.Linear(self.outp_dim, self.n_classes)
+        # Simple probe for monitoring accuracy
+        self.probe_head = probe_head(inpt_dim=self.encoder.dim, outp_dim=self.n_classes)
         self.train_acc = Accuracy("multiclass", num_classes=n_classes)
         self.valid_acc = Accuracy("multiclass", num_classes=n_classes)
 
@@ -128,7 +128,7 @@ class SetToSetFlowModelling(LightningModule):
 
         # Calculate the probe loss
         do_probe = batch_idx % self.probe_every == 0 or prefix == "valid"
-        probe_loss = self.linear_probe(data, prefix) if do_probe else 0
+        probe_loss = self.run_probe(data, prefix) if do_probe else 0
 
         # Combine and return the losses
         total_loss = diff_loss + probe_loss
@@ -151,13 +151,12 @@ class SetToSetFlowModelling(LightningModule):
         new_mask = self.encoder.get_combined_mask(mask)  # Account for registers
         return x, new_mask
 
-    def linear_probe(self, data: dict, prefix: str) -> None:
-        """Do the linear probe using a detached forward pass."""
+    def run_probe(self, data: dict, prefix: str) -> None:
+        """Run the classifier probe using a detached forward pass."""
         labels = data["labels"]
         with T.no_grad():
-            outputs, outmask = self.forward(data)
-            outputs = (outputs * outmask.unsqueeze(-1)).mean(-2)
-        outputs = self.probe(outputs)
+            x, mask = self.forward(data)
+        outputs = self.probe_head(x, mask=mask)
         probe_loss = F.cross_entropy(outputs, labels)
         acc = getattr(self, f"{prefix}_acc")
         acc(outputs, labels)
@@ -172,14 +171,10 @@ class SetToSetFlowModelling(LightningModule):
         return self._shared_step(data, batch_idx, "valid")
 
     def configure_optimizers(self) -> dict:
-        opt = self.hparams.optimizer(
-            filter(lambda p: p[1].requires_grad, self.named_parameters())
-        )
-        scheduler = {
-            "scheduler": self.hparams.scheduler(optimizer=opt),
-            "interval": "step",
-        }
-        return [opt], [scheduler]
+        params = filter(lambda p: p.requires_grad, self.parameters())
+        opt = self.hparams.optimizer(params)
+        sched = self.hparams.scheduler(optimizer=opt)
+        return [opt], [{"scheduler": sched, "interval": "step"}]
 
     def on_validation_epoch_end(self) -> None:
         """Create the pickled object for the backbone."""

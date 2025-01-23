@@ -13,7 +13,19 @@ encoder_config:
   dim: 512
   ctxt_dim: 64
   num_layers: 6
+  num_registers: 1 # This essentially the start-token
   pack_inputs: True # Much faster training but requires half precision
+
+probe_head:
+  _target_: mltools.mltools.transformers.ClassAttentionPooling
+  _partial_: true
+  num_layers: 2
+  dim: 128
+  layer_config:
+    attn_config:
+      num_heads: 4
+    ff_config:
+      mult: 1
 
 optimizer:
   _target_: mltools.mltools.optimisers.AdamWS

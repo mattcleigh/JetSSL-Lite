@@ -26,7 +26,8 @@ class MaskedParticleModelling(LightningModule):
         decoder_config: dict,
         optimizer: partial,
         scheduler: dict,
-        probe_every: int = 100,
+        probe_head: partial,
+        probe_every: int = 50,
     ) -> None:
         super().__init__()
         self.save_hyperparameters(logger=False)
@@ -52,18 +53,15 @@ class MaskedParticleModelling(LightningModule):
         # The linear layer to go from encoder to decoder
         self.enc_to_dec = nn.Linear(self.encoder.dim, self.decoder.dim)
 
-        # The output dimension (input for the tasks)
-        self.outp_dim = self.decoder.outp_dim
-
         # The learnable parameters for the dropped nodes in the decoder (1 per seq)
-        self.null_tokens = ParameterNoWD(T.randn((self.num_csts, self.outp_dim)) * 1e-3)
+        self.null_tokens = ParameterNoWD(T.randn((self.num_csts, self.decoder.dim)))
 
         # Initialise the task heads
-        self.cst_id_head = nn.Linear(self.outp_dim, NUM_CSTS_ID)
-        self.cst_head = nn.Linear(self.outp_dim, self.cst_dim)
+        self.cst_id_head = nn.Linear(self.decoder.dim, NUM_CSTS_ID)
+        self.cst_head = nn.Linear(self.decoder.dim, self.cst_dim)
 
-        # Simple linear probe for monitoring accuracy
-        self.probe = nn.Linear(self.encoder.outp_dim, self.n_classes)
+        # Simple probe for monitoring accuracy
+        self.probe_head = probe_head(inpt_dim=self.encoder.dim, outp_dim=self.n_classes)
         self.train_acc = Accuracy("multiclass", num_classes=n_classes)
         self.valid_acc = Accuracy("multiclass", num_classes=n_classes)
 
@@ -105,14 +103,14 @@ class MaskedParticleModelling(LightningModule):
         outputs = self.decoder(x, mask=mask)[:, n_reg:][null_mask]
 
         # Calculate the losses using each head
-        cst_loss = F.huber_loss(self.cst_head(outputs), csts[null_mask])
+        cst_loss = (self.cst_head(outputs) - csts[null_mask]).abs().mean()
         cst_id_loss = F.cross_entropy(self.cst_id_head(outputs), csts_id[null_mask])
         self.log(f"{prefix}/cst_loss", cst_loss)
         self.log(f"{prefix}/cst_id_loss", cst_id_loss)
 
         # Calculate the probe loss
         do_probe = batch_idx % self.probe_every == 0 or prefix == "valid"
-        probe_loss = self.linear_probe(data, prefix) if do_probe else 0
+        probe_loss = self.run_probe(data, prefix) if do_probe else 0
 
         # Return the total loss
         total_loss = cst_loss + cst_id_loss + probe_loss
@@ -135,13 +133,12 @@ class MaskedParticleModelling(LightningModule):
         new_mask = self.encoder.get_combined_mask(mask)  # Account for registers
         return x, new_mask
 
-    def linear_probe(self, data: dict, prefix: str) -> None:
-        """Do the linear probe using a detached forward pass."""
+    def run_probe(self, data: dict, prefix: str) -> None:
+        """Run the classifier probe using a detached forward pass."""
         labels = data["labels"]
         with T.no_grad():
-            outputs, outmask = self.forward(data)
-            outputs = (outputs * outmask.unsqueeze(-1)).mean(-2)
-        outputs = self.probe(outputs)
+            x, mask = self.forward(data)
+        outputs = self.probe_head(x, mask=mask)
         probe_loss = F.cross_entropy(outputs, labels)
         acc = getattr(self, f"{prefix}_acc")
         acc(outputs, labels)
@@ -156,14 +153,10 @@ class MaskedParticleModelling(LightningModule):
         return self._shared_step(data, batch_idx, "valid")
 
     def configure_optimizers(self) -> dict:
-        opt = self.hparams.optimizer(
-            filter(lambda p: p[1].requires_grad, self.named_parameters())
-        )
-        scheduler = {
-            "scheduler": self.hparams.scheduler(optimizer=opt),
-            "interval": "step",
-        }
-        return [opt], [scheduler]
+        params = filter(lambda p: p.requires_grad, self.parameters())
+        opt = self.hparams.optimizer(params)
+        sched = self.hparams.scheduler(optimizer=opt)
+        return [opt], [{"scheduler": sched, "interval": "step"}]
 
     def on_validation_epoch_end(self) -> None:
         """Create the pickled object for the backbone."""

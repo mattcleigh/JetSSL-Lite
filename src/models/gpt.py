@@ -25,7 +25,8 @@ class JetGPT(LightningModule):
         optimizer: partial,
         scheduler: dict,
         vocab_size: int,
-        probe_every: int = 100,
+        probe_head: partial,
+        probe_every: int = 50,
     ) -> None:
         super().__init__()
         self.save_hyperparameters(logger=False)
@@ -42,6 +43,7 @@ class JetGPT(LightningModule):
 
         # The transformers
         self.encoder = Transformer(**encoder_config)
+        assert self.encoder.num_registers == 1, "GPT only supports 1 register"
 
         # The embedding layers
         self.cst_emb = MLP(self.cst_dim, self.encoder.dim, **embed_config)
@@ -51,11 +53,8 @@ class JetGPT(LightningModule):
         # Initialise the task heads - +1 output for the unique end-token
         self.cst_head = MLP(self.encoder.dim, self.vocab_size + 1, **embed_config)
 
-        # The start token
-        self.start_token = nn.Parameter(T.randn(self.encoder.dim))
-
-        # Simple linear probe for monitoring accuracy
-        self.probe = nn.Linear(self.encoder.outp_dim, self.n_classes)
+        # Simple probe for monitoring accuracy
+        self.probe_head = probe_head(inpt_dim=self.encoder.dim, outp_dim=self.n_classes)
         self.train_acc = Accuracy("multiclass", num_classes=n_classes)
         self.valid_acc = Accuracy("multiclass", num_classes=n_classes)
 
@@ -71,7 +70,6 @@ class JetGPT(LightningModule):
         B = mask.shape[0]
 
         # Create the needed elements for the autoregressive model
-        start_token = self.start_token.expand(B, 1, -1)
         end_id = T.full((B, 1), self.vocab_size, device=csts.device, dtype=T.long)
         one_mask = T.ones((B, 1), device=mask.device, dtype=T.bool)
 
@@ -79,13 +77,10 @@ class JetGPT(LightningModule):
         x = self.cst_emb(csts) + self.cst_id_emb(csts_id)
         ctxt = self.jet_emb(jets)
 
-        # Add the start token to the beginning of the sequence
-        x = T.cat([start_token, x], dim=1)
-        input_mask = T.cat([one_mask, mask], dim=1)
-
-        # Pass through the encoder
-        x = self.encoder(x, mask=input_mask, ctxt=ctxt, causal=True)
-        x = self.cst_head(x[input_mask])
+        # Pass through the encoder - gain 1 register for the start token
+        x = self.encoder(x, mask=mask, ctxt=ctxt, causal=True)
+        new_mask = self.encoder.get_combined_mask(mask)
+        x = self.cst_head(x[new_mask])
 
         # Calculate targets
         targets = T.cat([tokens, end_id], dim=1)
@@ -98,7 +93,7 @@ class JetGPT(LightningModule):
 
         # Calculate the probe loss
         do_probe = batch_idx % self.probe_every == 0 or prefix == "valid"
-        probe_loss = self.linear_probe(data, prefix) if do_probe else 0
+        probe_loss = self.run_probe(data, prefix) if do_probe else 0
 
         # Return the total loss
         total_loss = cst_loss + probe_loss
@@ -121,13 +116,12 @@ class JetGPT(LightningModule):
         new_mask = self.encoder.get_combined_mask(mask)  # Account for registers
         return x, new_mask
 
-    def linear_probe(self, data: dict, prefix: str) -> None:
-        """Do the linear probe using a detached forward pass."""
+    def run_probe(self, data: dict, prefix: str) -> None:
+        """Run the classifier probe using a detached forward pass."""
         labels = data["labels"]
         with T.no_grad():
-            outputs, outmask = self.forward(data)
-            outputs = (outputs * outmask.unsqueeze(-1)).mean(-2)
-        outputs = self.probe(outputs)
+            x, mask = self.forward(data)
+        outputs = self.probe_head(x, mask=mask)
         probe_loss = F.cross_entropy(outputs, labels)
         acc = getattr(self, f"{prefix}_acc")
         acc(outputs, labels)
@@ -142,14 +136,10 @@ class JetGPT(LightningModule):
         return self._shared_step(data, batch_idx, "valid")
 
     def configure_optimizers(self) -> dict:
-        opt = self.hparams.optimizer(
-            filter(lambda p: p[1].requires_grad, self.named_parameters())
-        )
-        scheduler = {
-            "scheduler": self.hparams.scheduler(optimizer=opt),
-            "interval": "step",
-        }
-        return [opt], [scheduler]
+        params = filter(lambda p: p.requires_grad, self.parameters())
+        opt = self.hparams.optimizer(params)
+        sched = self.hparams.scheduler(optimizer=opt)
+        return [opt], [{"scheduler": sched, "interval": "step"}]
 
     def on_validation_epoch_end(self) -> None:
         """Create the pickled object for the backbone."""

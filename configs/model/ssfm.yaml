@@ -19,6 +19,17 @@ decoder_config:
   ctxt_dim: 32 # For the time encoding
   num_layers: 6
 
+probe_head:
+  _target_: mltools.mltools.transformers.ClassAttentionPooling
+  _partial_: true
+  num_layers: 2
+  dim: 128
+  layer_config:
+    attn_config:
+      num_heads: 4
+    ff_config:
+      mult: 1
+
 optimizer:
   _target_: mltools.mltools.optimisers.AdamWS
   _partial_: True

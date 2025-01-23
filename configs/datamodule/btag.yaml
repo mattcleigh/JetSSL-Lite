@@ -5,7 +5,7 @@ test_path: /srv/fast/share/rodem/btag/test.h5
 num_csts : 128
 n_classes: 3
 num_workers: 2
-batch_size: 128
+batch_size: 1000
 pin_memory: True
 transforms:
   - _target_: src.data.preprocessing.preprocess_batch

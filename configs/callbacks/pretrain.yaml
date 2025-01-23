@@ -6,6 +6,18 @@ lr_monitor:
   _target_: lightning.pytorch.callbacks.LearningRateMonitor
   logging_interval: step
 
+activation_monitor:
+  _target_: mltools.mltools.lightning_utils.ActivationMonitor
+  logging_interval: 200
+  layer_regex:
+    - .*\.sa.fn$
+    - .*\.ca.fn$
+    - .*\.ff.fn$
+    - .*encoder.layers\.\d+$
+    - .*decoder.layers\.\d+$
+  param_regex:
+    - .*\.gate$
+
 checkpoint_per_epoch:
   _target_: lightning.pytorch.callbacks.ModelCheckpoint
   dirpath: ${full_path}/checkpoints

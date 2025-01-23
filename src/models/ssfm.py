@@ -8,8 +8,8 @@ from torchmetrics import Accuracy
 
 from mltools.mltools.mlp import MLP
 from mltools.mltools.modules import Fourier
-from mltools.mltools.torch_utils import append_dims, get_activations
-from mltools.mltools.transformers import Attention, EncoderBlock, SwiGLUNet, Transformer
+from mltools.mltools.torch_utils import append_dims
+from mltools.mltools.transformers import Transformer
 from src.data.utils import NUM_CSTS_ID
 from src.models.utils import JetBackbone
 
@@ -170,25 +170,6 @@ class SetToSetFlowModelling(LightningModule):
 
     def validation_step(self, data: dict, batch_idx: int) -> T.Tensor:
         return self._shared_step(data, batch_idx, "valid")
-
-    def on_train_batch_start(self, data: dict, batch_idx: int) -> None:
-        """Add hooks to the model to monitor the layer activations."""
-        if batch_idx % 100 != 0:
-            return
-        self.act_dict = {}
-        self.hooks = get_activations(
-            self, self.act_dict, types=[EncoderBlock, Attention, SwiGLUNet]
-        )
-
-    def on_train_batch_end(self, outputs: T.Tensor, data: dict, batch_idx: int) -> None:
-        """Remove the hooks after the batch and log the activations."""
-        if batch_idx % 100 != 0:
-            return
-        for key, value in self.act_dict.items():
-            self.log(f"activations/{key}", value)
-        self.act_dict = {}
-        for hook in self.hooks:
-            hook.remove()
 
     def configure_optimizers(self) -> dict:
         opt = self.hparams.optimizer(

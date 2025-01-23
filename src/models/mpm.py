@@ -7,8 +7,8 @@ from torch import nn
 from torchmetrics import Accuracy
 
 from mltools.mltools.mlp import MLP
-from mltools.mltools.torch_utils import get_activations
-from mltools.mltools.transformers import Attention, EncoderBlock, SwiGLUNet, Transformer
+from mltools.mltools.torch_utils import ParameterNoWD
+from mltools.mltools.transformers import Transformer
 from src.data.utils import NUM_CSTS_ID
 from src.models.utils import JetBackbone
 
@@ -56,7 +56,7 @@ class MaskedParticleModelling(LightningModule):
         self.outp_dim = self.decoder.outp_dim
 
         # The learnable parameters for the dropped nodes in the decoder (1 per seq)
-        self.null_tokens = nn.Parameter(T.randn((self.num_csts, self.outp_dim)) * 1e-3)
+        self.null_tokens = ParameterNoWD(T.randn((self.num_csts, self.outp_dim)) * 1e-3)
 
         # Initialise the task heads
         self.cst_id_head = nn.Linear(self.outp_dim, NUM_CSTS_ID)
@@ -101,18 +101,12 @@ class MaskedParticleModelling(LightningModule):
         # Insert the null tokens so they are ordered wrt each other
         x[:, n_reg:][null_mask] = nt[null_sorted].type(x.dtype)
 
-        # Pass through the decoder - dont need registers after
-        outputs = self.decoder(x, mask=mask)[:, n_reg:]
+        # Pass through the decoder - dont need registers after - only care about dropped
+        outputs = self.decoder(x, mask=mask)[:, n_reg:][null_mask]
 
         # Calculate the losses using each head
-        cst_loss = F.huber_loss(
-            self.cst_head(outputs[null_mask]),
-            csts[null_mask],
-        )
-        cst_id_loss = F.cross_entropy(
-            self.cst_id_head(outputs[null_mask]),
-            csts_id[null_mask],
-        )
+        cst_loss = F.huber_loss(self.cst_head(outputs), csts[null_mask])
+        cst_id_loss = F.cross_entropy(self.cst_id_head(outputs), csts_id[null_mask])
         self.log(f"{prefix}/cst_loss", cst_loss)
         self.log(f"{prefix}/cst_id_loss", cst_id_loss)
 
@@ -160,25 +154,6 @@ class MaskedParticleModelling(LightningModule):
 
     def validation_step(self, data: dict, batch_idx: int) -> T.Tensor:
         return self._shared_step(data, batch_idx, "valid")
-
-    def on_train_batch_start(self, data: dict, batch_idx: int) -> None:
-        """Add hooks to the model to monitor the layer activations."""
-        if batch_idx % 100 != 0:
-            return
-        self.act_dict = {}
-        self.hooks = get_activations(
-            self, self.act_dict, types=[EncoderBlock, Attention, SwiGLUNet]
-        )
-
-    def on_train_batch_end(self, outputs: T.Tensor, data: dict, batch_idx: int) -> None:
-        """Remove the hooks after the batch and log the activations."""
-        if batch_idx % 100 != 0:
-            return
-        for key, value in self.act_dict.items():
-            self.log(f"activations/{key}", value)
-        self.act_dict = {}
-        for hook in self.hooks:
-            hook.remove()
 
     def configure_optimizers(self) -> dict:
         opt = self.hparams.optimizer(

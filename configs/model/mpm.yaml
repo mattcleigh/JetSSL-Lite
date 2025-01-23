@@ -11,13 +11,13 @@ embed_config:
 encoder_config:
   dim: 512
   ctxt_dim: 64
-  num_layers: 8
+  num_layers: 6
   num_registers: 8
   pack_inputs: True # Much faster training but requires half precision
 
 decoder_config:
   dim: 256
-  num_layers: 8
+  num_layers: 6
   pack_inputs: True # Much faster training but requires half precision
 
 optimizer:

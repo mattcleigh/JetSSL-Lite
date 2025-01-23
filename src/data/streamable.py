@@ -15,11 +15,12 @@ def batch_idxes(
     batch_size: int,
     num_jets: int,
     drop_last: bool = False,
-    start: int = 0,
+    global_step: int = 0,
 ) -> list:
     """Construct a generator of batch indexes."""
     drop_last &= num_jets % batch_size != 0
-    return list(range(start, num_jets - drop_last * batch_size, batch_size))
+    idxes = list(range(0, num_jets - drop_last * batch_size, batch_size))
+    return idxes[global_step % len(idxes) :]
 
 
 class StreamDataset(Dataset):
@@ -130,7 +131,7 @@ class StreamModule(LightningDataModule):
                 self.batch_size,
                 len(dataset),
                 drop_last=flag == "train",
-                start=self.batch_idx,
+                global_step=self.trainer.global_step if flag == "train" else 0,
             ),
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
@@ -152,8 +153,6 @@ class StreamModule(LightningDataModule):
 
     def on_before_batch_transfer(self, batch: dict, dataloader_idx: int) -> None:
         """Update the last batch index during validation."""
-        if self.trainer.validating:
-            self.batch_idx = self.trainer.global_step // self.trainer.current_epoch
         if self.transforms is not None:
             for transform in self.transforms:
                 batch = transform(batch)
@@ -162,12 +161,6 @@ class StreamModule(LightningDataModule):
     def get_data_sample(self) -> tuple:
         """Get a data sample to help initialise the network."""
         return next(iter(self.valid_set))
-
-    def load_state_dict(self, state_dict: dict) -> None:
-        self.batch_idx = state_dict["batch_idx"]
-
-    def state_dict(self) -> dict:
-        return {"batch_idx": self.batch_idx}
 
     def get_n_classes(self) -> int:
         """Get the number of classes in the dataset."""

@@ -1,5 +1,6 @@
 """Check that the data has been prepared correctly by making a few plots."""
 
+import joblib
 import rootutils
 
 root = rootutils.setup_root(search_from=".", pythonpath=True)
@@ -50,12 +51,12 @@ def main():
     bt_data = MapDataset(
         file_path="/srv/fast/share/rodem/btag/train.h5",
         num_jets=10_000,
-        num_csts=32,
+        num_csts=64,  # Will automatically be reduced to the number in file
     )
     jc_data = MapDataset(
         file_path="/srv/fast/share/rodem/JetClassH5/val_5M_combined.h5",
         num_jets=10_000,
-        num_csts=32,
+        num_csts=64,
     )
 
     # Load pure arrays of the constituents
@@ -76,8 +77,6 @@ def main():
             bins=cst_bins[i],
             logy=True,
             ignore_nans=True,
-            incl_overflow=True,
-            incl_underflow=True,
             col_labels=[cst_labels[i]],
             legend_kwargs={"loc": "upper right"},
             hist_kwargs=[{"fill": True, "alpha": 0.5}, {"fill": True, "alpha": 0.5}],
@@ -98,12 +97,46 @@ def main():
             bins=jet_bins[i],
             logy=True,
             ignore_nans=True,
-            incl_overflow=True,
-            incl_underflow=True,
             col_labels=[jet_labels[i]],
             legend_kwargs={"loc": "upper right"},
             hist_kwargs=[{"fill": True, "alpha": 0.5}, {"fill": True, "alpha": 0.5}],
             path=root / f"plots/jets_{i}.png",
+            do_norm=True,
+        )
+
+    # Plot the transformed constituent features for the two datasets
+    cst_fn = joblib.load(root / "resources/cst_quantiles_64.joblib")
+    jc_csts = cst_fn.transform(jc_csts)
+    bt_csts = cst_fn.transform(bt_csts)
+    for i in range(len(cst_labels)):
+        plot_multi_hists(
+            data_list=[jc_csts[:, i : i + 1], bt_csts[:, i : i + 1]],
+            fig_height=4,
+            data_labels=["JetClass", "BTag"],
+            ignore_nans=True,
+            logy=True,
+            col_labels=[cst_labels[i]],
+            legend_kwargs={"loc": "upper right"},
+            hist_kwargs=[{"fill": True, "alpha": 0.5}, {"fill": True, "alpha": 0.5}],
+            path=root / f"plots/transformed_csts_{i}.png",
+            do_norm=True,
+        )
+
+    # Plot the transformed jet features for the two datasets
+    jet_fn = joblib.load(root / "resources/jet_quantiles.joblib")
+    jc_jets = jet_fn.transform(jc_jets)
+    bt_jets = jet_fn.transform(bt_jets)
+    for i in range(len(jet_labels)):
+        plot_multi_hists(
+            data_list=[jc_jets[:, i : i + 1], bt_jets[:, i : i + 1]],
+            fig_height=4,
+            data_labels=["JetClass", "BTag"],
+            ignore_nans=True,
+            logy=True,
+            col_labels=[jet_labels[i]],
+            legend_kwargs={"loc": "upper right"},
+            hist_kwargs=[{"fill": True, "alpha": 0.5}, {"fill": True, "alpha": 0.5}],
+            path=root / f"plots/transformed_jets_{i}.png",
             do_norm=True,
         )
 

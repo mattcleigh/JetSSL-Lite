@@ -1,11 +1,12 @@
 import numpy as np
 import torch as T
 from sklearn.base import BaseEstimator
+from torch import nn
 
 
 def tokenize_batch(
     jet_dict: dict[T.Tensor],
-    token_fn: BaseEstimator,
+    token_fn: nn.Module,
 ) -> dict:
     """Add token versions of the constituents to the jet_dict."""
     csts = jet_dict["csts"]
@@ -25,10 +26,19 @@ def preprocess_batch(
     csts = jet_dict["csts"]
     mask = jet_dict["mask"]
     jets = jet_dict["jets"]
+
+    # Pad the csts with zeros to match what the cst_fn expects
+    if (feat_diff := cst_fn.n_features_in_ - csts.shape[-1]) > 0:
+        zeros = np.zeros((csts.shape[:-1] + (feat_diff,)), dtype=csts.dtype)
+        csts = np.concatenate((csts, zeros), axis=-1)
     csts[mask] = T.from_numpy(cst_fn.transform(csts[mask])).float()
-    jets = T.from_numpy(jet_fn.transform(jets)).float()
+    if feat_diff > 0:
+        csts = csts[:, :-feat_diff]  # Remove the padding
     jet_dict["csts"] = csts
+
+    jets = T.from_numpy(jet_fn.transform(jets)).float()
     jet_dict["jets"] = jets
+
     return jet_dict
 
 

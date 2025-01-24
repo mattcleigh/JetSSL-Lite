@@ -2,7 +2,7 @@ _target_: src.data.streamable.StreamModule
 train_path: /srv/fast/share/rodem/JetClassH5/train_100M_combined.h5
 val_path: /srv/fast/share/rodem/JetClassH5/val_5M_combined.h5
 test_path: /srv/fast/share/rodem/JetClassH5/test_5M_combined.h5
-num_csts : 32
+num_csts : 64
 n_classes: 10
 num_workers: 2
 batch_size: 1000
@@ -12,7 +12,7 @@ transforms:
     _partial_: True
     cst_fn:
       _target_: joblib.load
-      filename: ${root_dir}/resources/cst_quantiles.joblib
+      filename: ${root_dir}/resources/cst_quantiles_${datamodule.num_csts}.joblib
     jet_fn:
       _target_: joblib.load
-      filename: ${root_dir}/resources/jet_quantiles.joblib
+      filename: ${root_dir}/resources/jet_quantiles_${datamodule.num_csts}.joblib

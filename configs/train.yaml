@@ -40,7 +40,7 @@ trainer:
   num_nodes: 1
   default_root_dir: ${full_path}
   # Below are useful for pretraining!
-  val_check_interval: 50_000  # ~ 1 hour on an ampere gpu
+  val_check_interval: 5_000  # ~ 1 hour on an ampere gpu
   limit_val_batches: 500    # Dont need 5M validation samples
 
 # Logger settings

@@ -43,7 +43,7 @@ def get_args():
     parser.add_argument(
         "--num_csts",
         type=int,
-        default=32,
+        default=64,
         help="Number of constituents.",
     )
     parser.add_argument(
@@ -80,16 +80,16 @@ def main():
     cst_qt = QuantileTransformer(
         output_distribution="normal",
         n_quantiles=args.n_quantiles,
-        subsample=len(csts) + 1,
+        subsample=None,
     )
     cst_qt.fit(csts)
-    dump(cst_qt, root / "resources/cst_quantiles.joblib")
+    dump(cst_qt, root / f"resources/cst_quantiles_{args.num_csts}.joblib")
 
     log.info("Fitting the quantile transformer for the jets")
     jet_qt = QuantileTransformer(
         output_distribution="normal",
         n_quantiles=args.n_quantiles,
-        subsample=len(jets) + 1,
+        subsample=None,
     )
     jet_qt.fit(jets)
     dump(jet_qt, root / "resources/jet_quantiles.joblib")
@@ -101,7 +101,7 @@ def main():
     kmeans = KMeans(n_clusters=args.n_clusters, max_iter=300, verbose=10)
     kmeans.fit(csts_tensor)
     kmeans.to("cpu")
-    T.save(kmeans, root / "resources/kmeans.pkl")
+    T.save(kmeans, root / f"resources/kmeans_{args.num_csts}.pkl")
 
 
 if __name__ == "__main__":

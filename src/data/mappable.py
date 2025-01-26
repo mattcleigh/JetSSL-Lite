@@ -1,11 +1,13 @@
 """For loading in jets from HDF files and creating a mappable dataset."""
 
 import logging
+from functools import partial
 
 import h5py
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 
+from src.data.preprocessing import collate_and_transform
 from src.data.utils import (
     CST_FEATURES,
     JET_FEATURES,
@@ -144,6 +146,7 @@ class MapModule(LightningDataModule):
             pin_memory=self.pin_memory,
             shuffle=flag == "train",
             drop_last=flag == "train",
+            collate_fn=partial(collate_and_transform, transforms=self.transforms),
         )
 
     def train_dataloader(self) -> DataLoader:

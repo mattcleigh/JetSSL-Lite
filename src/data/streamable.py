@@ -1,11 +1,14 @@
 """For streaming in one huge HDF file."""
 
 import logging
+from functools import partial
 
 import h5py
+import torch as T
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 
+from src.data.preprocessing import collate_and_transform
 from src.data.utils import CST_FEATURES, JET_FEATURES
 
 log = logging.getLogger(__name__)
@@ -20,7 +23,8 @@ def batch_idxes(
     """Construct a generator of batch indexes."""
     drop_last &= num_jets % batch_size != 0
     idxes = list(range(0, num_jets - drop_last * batch_size, batch_size))
-    return idxes[global_step % len(idxes) :]
+    start_step = global_step % len(idxes)
+    return idxes[start_step:]
 
 
 class StreamDataset(Dataset):
@@ -78,14 +82,14 @@ class StreamDataset(Dataset):
         return self.num_jets
 
     def __getitem__(self, idx: int) -> tuple:
-        """Get a batch of jets."""
+        """Get a batch - as it is already batched it should be pytorch tensors."""
         self.data_dict = {}
         idx_f = idx + self.batch_size
         for key in self.jet_features:
             self.data_dict[key] = self.file[key][idx:idx_f]
         for key in self.cst_features:
             self.data_dict[key] = self.file[key][idx:idx_f, : self.num_csts]
-        return self.data_dict
+        return {k: T.from_numpy(v) for k, v in self.data_dict.items()}
 
 
 class StreamModule(LightningDataModule):
@@ -136,7 +140,11 @@ class StreamModule(LightningDataModule):
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
             batch_size=None,  # dataset returns a batches already!
-            collate_fn=None,
+            collate_fn=partial(
+                collate_and_transform,
+                do_default_collate=False,  # Already collated don't do it again
+                transforms=self.transforms,
+            ),
         )
 
     def train_dataloader(self) -> DataLoader:
@@ -150,13 +158,6 @@ class StreamModule(LightningDataModule):
 
     def predict_dataloader(self) -> DataLoader:
         return self.test_dataloader()
-
-    def on_before_batch_transfer(self, batch: dict, dataloader_idx: int) -> None:
-        """Update the last batch index during validation."""
-        if self.transforms is not None:
-            for transform in self.transforms:
-                batch = transform(batch)
-        return batch
 
     def get_data_sample(self) -> tuple:
         """Get a data sample to help initialise the network."""

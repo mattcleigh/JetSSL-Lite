@@ -1,12 +1,7 @@
-_target_: src.data.streamable.StreamModule
-train_path: /srv/fast/share/rodem/JetClassH5/train_100M_combined.h5
-val_path: /srv/fast/share/rodem/JetClassH5/val_5M_combined.h5
-test_path: /srv/fast/share/rodem/JetClassH5/test_5M_combined.h5
-num_csts: 64
-n_classes: 10
-num_workers: 2
-batch_size: 1000
-pin_memory: True
+defaults:
+  - jetclass
+
+# Load the same as datamodule/jetclass.yaml but add masking step to the transforms
 transforms:
   - _target_: src.data.preprocessing.mask_batch
     _partial_: True
@@ -19,8 +14,3 @@ transforms:
     jet_fn:
       _target_: joblib.load
       filename: ${root_dir}/resources/jet_quantiles.joblib
-  - _target_: src.data.preprocessing.tokenize_batch
-    _partial_: True
-    token_fn:
-      _target_: torch.load
-      f: ${root_dir}/resources/kmeans_${datamodule.num_csts}.pkl

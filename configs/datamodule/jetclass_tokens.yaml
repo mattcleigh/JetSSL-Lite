@@ -1,12 +1,7 @@
-_target_: src.data.mappable.MapModule
-train_path: /srv/fast/share/rodem/btag/train.h5
-val_path: /srv/fast/share/rodem/btag/validate.h5
-test_path: /srv/fast/share/rodem/btag/test.h5
-num_csts : 64
-n_classes: 3
-num_workers: 4
-batch_size: 1000
-pin_memory: True
+defaults:
+  - jetclass
+
+# Load the same as datamodule/jetclass.yaml but add tokenization step to the transforms
 transforms:
   - _target_: src.data.preprocessing.preprocess_batch
     _partial_: True
@@ -16,3 +11,8 @@ transforms:
     jet_fn:
       _target_: joblib.load
       filename: ${root_dir}/resources/jet_quantiles.joblib
+  - _target_: src.data.preprocessing.tokenize_batch
+    _partial_: True
+    token_fn:
+      _target_: torch.load
+      f: ${root_dir}/resources/kmeans_${datamodule.num_csts}.pkl

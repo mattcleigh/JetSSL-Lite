@@ -4,7 +4,7 @@ val_path: /srv/fast/share/rodem/JetClassH5/val_5M_combined.h5
 test_path: /srv/fast/share/rodem/JetClassH5/test_5M_combined.h5
 num_csts : 64
 n_classes: 10
-num_workers: 2
+num_workers: 8
 batch_size: 1000
 pin_memory: True
 transforms:

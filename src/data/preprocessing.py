@@ -1,7 +1,29 @@
+from collections.abc import Iterable
+
 import numpy as np
 import torch as T
 from sklearn.base import BaseEstimator
 from torch import nn
+from torch.utils.data import default_collate
+
+
+def collate_and_transform(
+    batch: Iterable[dict],
+    do_default_collate: bool = True,
+    transforms: list[callable] | None = None,
+) -> dict:
+    """Collate the batch and apply the transforms.
+
+    Why this not lightning's on_before_batch_transfer?
+    This still runs inside the pytorch multiprocessing pool for data loading.
+    Thus it runs asynchonously for each batch being prepared.
+    """
+    if do_default_collate:
+        batch = default_collate(batch)
+    if transforms is not None:
+        for transform in transforms:
+            batch = transform(batch)
+    return batch
 
 
 def tokenize_batch(

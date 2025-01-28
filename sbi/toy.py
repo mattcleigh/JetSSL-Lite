@@ -69,7 +69,7 @@ def import_args():
     parser.add_argument(
         "--plot_interval",
         type=int,
-        default=1000,
+        default=500,
         help="How often to plot",
     )
     parser.add_argument(
@@ -108,6 +108,8 @@ def main():
     model.to(device)
     ema_model = deepcopy(model)
     ema_model.requires_grad_(False)
+    model.train()  # Online model always in training mode
+    ema_model.eval()  # Offline model always in eval mode
     print(f"Model has {count_parameters(model)} parameters.")
 
     # Initialise the optimiser and scheduler
@@ -125,32 +127,23 @@ def main():
     # Training
     pbar = trange(args.total_steps)
     for it in pbar:
-        model.train()
         optim.zero_grad()
 
-        # Get training samples
         x = sample_toy_data(args.batch_size, device)
-
-        # Get loss
         loss = model.get_loss(x)
 
-        # Gradient step
         loss.backward()
         T.nn.utils.clip_grad_norm_(model.parameters(), args.grad_clip)
         optim.step()
         sched.step()
 
-        # Update the EMA model
         ema_param_sync(model, ema_model, args.ema_decay)
 
-        # Set the tqdm bar to show the loss and the lr
         lr = optim.param_groups[0]["lr"]
         pbar.set_postfix(loss=loss.item(), lr=lr, refresh=False)
 
         # Plot some intermediate results
         if it % args.plot_interval == 0:
-            ema_model.eval()
-
             # Do the fully marginal case - everything goes to decoder (x0_mask = False)
             x = sample_toy_data(args.inference_samples, device)
             x0_mask = T.zeros((args.inference_samples, 3), dtype=T.bool, device=device)

@@ -83,19 +83,16 @@ class SSFM(nn.Module):
         v_mean[x0_mask] = 0  # Zero out the conditional velocities
         return v_mean
 
-    def embed(self, data: T.Tensor) -> T.Tensor:
-        """Embed / tokenise the input data for the encoder."""
-        vals = T.stack([emb(x) for emb, x in zip(self.val_emb, data)], dim=1)
-        poss = T.stack([emb(x) for emb, x in zip(self.pos_emb, data)], dim=1)
-        return T.cat([vals, poss], dim=-1)
-
-    def get_loss(self, x0: T.Tensor) -> T.Tensor:
+    def get_loss(self, x0: T.Tensor, log_return: bool = False) -> dict:
         """Calculate the CFM loss given the clean batch."""
         B, S, _D = x0.shape
 
         # The data will be routed to either the encoder or decoder via the mask
         # The mask is True for encoder inputs and False for decoder inputs
-        x0_mask = T.rand((B, S), device=x0.device) < 0.5
+        x0_mask = T.rand((B, S), device=x0.device) > 0.35
+        b_idx = T.arange(B, device=x0.device)
+        f_idx = T.randint(0, S, (B,), device=x0.device)
+        x0_mask[b_idx, f_idx] = False  # Force at least one False per row
         xt_mask = ~x0_mask
 
         # Get all the values needed for conditional flow matching
@@ -114,7 +111,7 @@ class SSFM(nn.Module):
             return_logvar=True,
         )
 
-        # Trim the velocity vectors to the ones that will be used in the loss
+        # Trim to the terms that will be used in the loss
         v_mean = v_mean[xt_mask]
         v_logvar = v_logvar[xt_mask]
         v = v[xt_mask]
@@ -162,6 +159,28 @@ def sample_toy_data(n_samples: int, device: T.device) -> T.Tensor:
     x2 = T.randn_like(theta) * 0.5 * x1.abs() + 0.1 * theta**2
     combined = T.stack([theta, x1, x2], dim=1)
     return combined.float().unsqueeze(-1)  # B x S x D = B x 3 x 1
+
+
+def plot_scatter(
+    vals: list[list],
+    labels: list[str],
+    path: str,
+    xlabel: str = "",
+    ylabel: str = "",
+    xlim: float | None = None,
+    ylim: float | None = None,
+) -> None:
+    fig, axis = plt.subplots(1, 1, figsize=(4, 4))
+    for i, ((x, y), label) in enumerate(zip(vals, labels, strict=True)):
+        axis.plot(x, y, ".", label=label, color=f"C{i}", alpha=0.05)
+    axis.set_xlim(xlim)
+    axis.set_ylim(ylim)
+    axis.set_xlabel(xlabel)
+    axis.set_ylabel(ylabel)
+    fig.legend()
+    fig.set_tight_layout(True)
+    fig.savefig(path)
+    plt.close()
 
 
 def plot_histos(data: np.ndarray, output: np.ndarray, path: str) -> None:

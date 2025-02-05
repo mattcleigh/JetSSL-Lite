@@ -6,7 +6,7 @@ defaults:
   - hydra: default
   - callbacks: pretrain
   - datamodule: jetclass_masked
-  - model: mpm
+  - model: ssfm
   - experiment: null
 
 seed: 42 # For reproducibility
@@ -30,7 +30,7 @@ ckpt_flag: last.ckpt # Name of the checkpoint file, can use wildcards
 # Trainer settings
 trainer:
   _target_: lightning.Trainer
-  precision: 16-mixed
+  precision: bf16-mixed
   max_epochs: 999999
   enable_progress_bar: True
   gradient_clip_val: 1

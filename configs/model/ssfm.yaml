@@ -1,5 +1,7 @@
 _target_: src.models.ssfm.SetToSetFlowModelling
 
+probe_every: 50
+
 embed_config:
   hddn_dim: 128
   num_blocks: 2

@@ -1,6 +1,7 @@
-_target_: src.models.mpm.MaskedParticleModelling
+_target_: src.models.jepa.JetJEPA
 
 probe_every: 50
+ema_param_sync: 0.999
 
 embed_config:
   hddn_dim: 128
@@ -18,8 +19,8 @@ encoder_config:
   pack_inputs: True # Much faster training but requires half precision
 
 decoder_config:
-  dim: 256
-  num_layers: 6
+  dim: 512 # Unlinke MPM this must be the same as the encoder dim
+  num_layers: 2
   pack_inputs: True # Much faster training but requires half precision
 
 probe_head:

@@ -1,5 +1,6 @@
 _target_: src.models.gpt.JetGPT
 
+probe_every: 50
 vocab_size: 10_000
 
 embed_config:

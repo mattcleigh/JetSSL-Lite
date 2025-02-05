@@ -24,7 +24,7 @@ def get_args():
     parser.add_argument(
         "--source_path",
         type=str,
-        default="/srv/beegfs/scratch/groups/rodem/anomalous_jets/data/JetClass/Pythia/",
+        default="/srv/beegfs/scratch/groups/rodem/datasets/JetClass/Pythia/",
         help="The path to the JetClass files",
     )
     parser.add_argument(

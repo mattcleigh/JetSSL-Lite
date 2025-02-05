@@ -138,7 +138,7 @@ class MaskedParticleModelling(LightningModule):
         labels = data["labels"]
         with T.no_grad():
             x, mask = self.forward(data)
-        outputs = self.probe_head(x, mask=mask)
+        outputs = self.probe_head(x.detach(), mask=mask)  # Detach again - to be safe ;)
         probe_loss = F.cross_entropy(outputs, labels)
         acc = getattr(self, f"{prefix}_acc")
         acc(outputs, labels)

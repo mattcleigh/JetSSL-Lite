@@ -1,0 +1,20 @@
+# This is all the SLURM specific configuration for the workflow
+# Variables here are specific to the UNIGE HPC
+
+verbose: false
+printshellcmds: true
+sdm: apptainer
+executor: slurm
+jobs: 200 # Maximum number of jobs to run in parallel
+default-resources:
+  slurm_account: golling
+  slurm_partition: shared-cpu,private-dpnc-cpu
+  runtime: 60 # minutes
+  mem_mb: 4000
+  threads: 12
+apptainer-args: >- # multi-line string
+  --nv
+  --bind /srv,/home
+  --cleanenv
+  --env PYTHONPATH=.
+  --env WANDB_API_KEY=$WANDB_API_KEY

@@ -31,12 +31,12 @@ class CatchupToLR(BaseFinetuning):
 
     def finetune_function(self, pl_module, step, optimizer) -> None:
         """Used to update the learning rate of the backbone."""
-        # Still in the frozen stage
-        if step < self.unfreeze_at_step:
-            pass
+        # Still in the frozen stage - nothing to do
+        if step < self.unfreeze_at_step or self.unfreeze_at_step == -1:
+            return
 
         # Time to thaw, initial learning rate is negligable
-        elif self.frozen:
+        if self.frozen:
             self.unfreeze_and_add_param_group(
                 pl_module.backbone,
                 optimizer,
@@ -51,7 +51,7 @@ class CatchupToLR(BaseFinetuning):
                     optimizer.param_groups[-1][key] = original[key]
 
         # Linearly ramp up
-        elif self.steps_done < self.catchup_steps:
+        if self.steps_done < self.catchup_steps:
             model_lr = optimizer.param_groups[0]["lr"]
             delta = model_lr - self.backbone_lr
             steps_left = self.catchup_steps - self.steps_done

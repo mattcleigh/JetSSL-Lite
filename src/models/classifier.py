@@ -96,11 +96,7 @@ class Classifier(LightningModule):
         return {"output": output, "label": labels.unsqueeze(-1)}
 
     def configure_optimizers(self) -> dict:
-        opt = self.hparams.optimizer(
-            filter(lambda p: p[1].requires_grad, self.named_parameters())
-        )
-        scheduler = {
-            "scheduler": self.hparams.scheduler(optimizer=opt),
-            "interval": "step",
-        }
-        return [opt], [scheduler]
+        params = filter(lambda p: p.requires_grad, self.parameters())
+        opt = self.hparams.optimizer(params)
+        sched = self.hparams.scheduler(optimizer=opt)
+        return [opt], [{"scheduler": sched, "interval": "step"}]

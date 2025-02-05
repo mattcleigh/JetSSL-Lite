@@ -1,6 +1,6 @@
 _target_: src.models.classifier.Classifier
 
-backbone_path: set_me_please.pkl
+backbone_path: set/me/please.pkl
 
 class_head:
   _target_: mltools.mltools.transformers.ClassAttentionPooling

@@ -1,0 +1,16 @@
+defaults:
+  - jetclass
+
+# Load the same as datamodule/jetclass.yaml but add masking step to the transforms
+transforms:
+  - _target_: src.data.preprocessing.cluster_mask_batch
+    _partial_: True
+    mask_fraction: 0.3
+  - _target_: src.data.preprocessing.preprocess_batch
+    _partial_: True
+    cst_fn:
+      _target_: joblib.load
+      filename: ${root_dir}/resources/cst_quantiles_${datamodule.num_csts}.joblib
+    jet_fn:
+      _target_: joblib.load
+      filename: ${root_dir}/resources/jet_quantiles.joblib

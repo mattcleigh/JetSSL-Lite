@@ -1,3 +1,4 @@
+import random
 from collections.abc import Iterable
 
 import numpy as np
@@ -5,6 +6,8 @@ import torch as T
 from sklearn.base import BaseEstimator
 from torch import nn
 from torch.utils.data import default_collate
+
+from src.data.cluster import batch_kt_cluster
 
 
 def collate_and_transform(
@@ -80,9 +83,35 @@ def mask_batch(
     return jet_dict
 
 
+def cluster_mask_batch(
+    jet_dict: dict,
+    mask_fraction: float = 0.5,
+    R: float = 0.1,
+    p: float = -1.0,
+    key: str = "null_mask",
+) -> dict:
+    """Clusters the jets using the (anti)-kt algorithm and maskes some sub-jets."""
+    csts = jet_dict["csts"].numpy()
+    mask = jet_dict["mask"]
+    null_mask = T.zeros_like(mask, dtype=T.bool)
+
+    # Cluster the jets
+    _, idxes, num_subjets = batch_kt_cluster(csts, R, p)
+
+    # Loop through the batch
+    for b_idx in range(csts.shape[0]):
+        sjets = list(range(num_subjets[b_idx]))
+        to_mask = int(mask_fraction * num_subjets[b_idx])
+        random.shuffle(sjets)
+        for sj in sjets[:to_mask]:
+            null_mask[b_idx][idxes[b_idx] == sj] = True
+    jet_dict[key] = null_mask
+    return jet_dict
+
+
 def mask_jet(
     mask: T.Tensor,
-    mask_fraction: float = 0.4,
+    mask_fraction: float = 0.5,
     seed: int | None = None,
 ) -> np.ndarray:
     """Randomly drop a fraction of the jet based on the total number of constituents."""

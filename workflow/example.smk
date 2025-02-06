@@ -54,7 +54,8 @@ rule pretrain:
         "network_name={m_name}",
         "trainer.max_epochs=4",
         "full_resume=True",
-        lambda w : f"datamodule={"jetclass_tokens" if w.m_name == "jetgpt" else "jetclass_masked"}",
+        lambda w : f"datamodule={'jetclass_tokens' if w.m_name == 'jetgpt' else 'jetclass_masked'}",
+        lambda w : "datamodule.batchsize=256" if w.m_name == "jetgpt" else "",
     threads: 12
     resources:
         slurm_partition="shared-gpu,private-dpnc-gpu",

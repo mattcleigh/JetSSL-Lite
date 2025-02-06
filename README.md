@@ -12,7 +12,7 @@
 
 </div>
 
-The goal of this project is to test out various self-supervised / unsupervised pretraining strategies for high energy physics jets. 
+The goal of this project is to test out various self-supervised / unsupervised pretraining strategies for high energy physics jets.
 It represents a minimal implementation of the paper [Is Tokenization Needed for Masked Particle Modelling?](https://arxiv.org/html/2409.12589v2).
 It is also a stripped-down and reduced version of the [original repo](https://github.com/mattcleigh/jetssl), which still had older code used in testing and development.
 
@@ -27,9 +27,9 @@ Additionally, some models require [FlashAttention](https://github.com/Dao-AILab/
 │   ├── callbacks
 │   ├── datamodule
 │   ├── experiment
-│   ├── export.yaml
 │   ├── hydra
 │   ├── model
+│   ├── export.yaml
 │   └── train.yaml
 ├── data               # Scripts for generating the data files
 ├── docker             # Dockerfile and other docker related files
@@ -37,6 +37,8 @@ Additionally, some models require [FlashAttention](https://github.com/Dao-AILab/
 ├── plots              # output plots
 ├── resources          # Preprocessors and discretisors
 ├── scripts            # All executable scripts other than data setup
+├── workflow           # Workflow examples using snakemake
+├── hydra_cli          # A required directory for snakemake+hydra
 ├── pyproject.toml
 ├── README.md
 ├── requirements.txt
@@ -144,6 +146,33 @@ Alternatively, specific parameters can be set via the command line:
 ```sh
 python scripts/train.py model=ssfm encoder_config.dim=64 decoder_config.dim=64
 ```
+
+### Using Snakemake
+
+The `workflow` directory contains a snakemake file that can be used to run an experiment containing multiple steps.
+- This is useful for example running the pretraining and then the finetuning command in sequence for many SSL models.
+- The current configuration is designed explicitly for the UNIGE HPC cluster and is intended to be an example only.
+- Snakemake's updates are not backwards compatible, so specific versions are required to run the workflow.
+- The `hydra_cli` directory is required for snakemake to work with hydra.
+
+Install the required packages using:
+```sh
+pip install snakemake-executor-plugin-slurm==0.4.1 snakemake==8.4.1
+```
+
+Then run the workflow using:
+```sh
+snakemake --snakefile workflow/example.smk --workflow-profile workflow
+```
+
+To just build the dag and not run the workflow, append the following to the above command:
+```sh
+... -e dryrun --dag | dot -Tpng > workflow/example.png
+```
+
+This creates the following image:
+
+<img src="workflow/example.png" alt="" width="600"/>
 
 ## License
 

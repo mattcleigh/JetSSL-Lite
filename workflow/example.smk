@@ -19,43 +19,46 @@ model_list = ["jepa", "jetgpt", "ssfm", "mpm"]
 
 rule all:
     input:
-        expand(f"{output_dir}{{m_name}}_ft/train_finished.txt", m_name=model_list)
+        expand(f"{output_dir}ft_{{m_name}}/done.txt", m_name=model_list)
 
 rule finetune:
     output:
-        f"{output_dir}{{m_name}}_ft/train_finished.txt"
+        f"{output_dir}ft_{{m_name}}/done.txt"
     input:
-        f"{output_dir}{{m_name}}/backbone.pkl"
+        f"{output_dir}{{m_name}}/done.txt"
     params:
         "scripts/train.py",
         "model=classifier",
         "network_name={m_name}_ft",
-        "callbacks.backbone_finetune.unfreeze_at_step=9999999999",
-        "datamodule.batch_size=500",
-        "trainer.max_epochs=1",
+        "callbacks.backbone_finetune.unfreeze_at_step=-1",
+        "datamodule.batch_size=1000",
         "full_resume=True",
         f"project_name={project_name}",
         f"model.backbone_path={output_dir}{{m_name}}/backbone.pkl",
     threads: 6
+    wildcard_constraints:
+        m_name = '(?!ft_)[0-9a-zA-Z_]+'
     resources:
         slurm_partition="shared-gpu,private-dpnc-gpu",
         runtime=12 * 60,  # minutes
-        slurm_extra="--gres=gpu:1 --constraint=COMPUTE_TYPE_AMPERE",
+        slurm_extra="--gres=gpu:1,VramPerGpu:20GB --constraint=COMPUTE_TYPE_AMPERE",
         mem_mb=20000,
     wrapper:
         "file:hydra_cli"
 
 rule pretrain:
     output:
-        f"{output_dir}{{m_name}}/backbone.pkl"
+        f"{output_dir}{{m_name}}/done.txt"
     params:
         "scripts/train.py",
         "model={m_name}",
         "network_name={m_name}",
-        "trainer.max_epochs=4",
         "full_resume=True",
+        f"project_name={project_name}",
         lambda w : f"datamodule={'jetclass_tokens' if w.m_name == 'jetgpt' else 'jetclass_masked'}",
-        lambda w : "datamodule.batchsize=256" if w.m_name == "jetgpt" else "",
+        lambda w : "datamodule.batch_size=256" if w.m_name == "jetgpt" else "",
+    wildcard_constraints:
+        m_name = '(?!ft_)[0-9a-zA-Z_]+'
     threads: 12
     resources:
         slurm_partition="shared-gpu,private-dpnc-gpu",

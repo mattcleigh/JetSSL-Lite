@@ -43,4 +43,4 @@ scheduler:
   _target_: src.models.utils.linear_warmup_cosine_decay
   _partial_: True
   warmup_steps: 1_000
-  total_steps: 100_000
+  total_steps: -1 # Will automatically sync to length of dataloader * max_epochs

@@ -1,11 +1,31 @@
+import logging
 import math
 
 import torch as T
+from lightning import LightningModule
 from torch import nn
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LambdaLR
 
 from mltools.mltools.transformers import Transformer
+
+logger = logging.getLogger(__name__)
+
+
+def get_max_steps(model: LightningModule) -> int:
+    """Get the maximum number of steps from the model trainer."""
+    try:
+        logger.info("Attempting to get the max steps from the model trainer")
+        max_steps = model.trainer.max_steps
+        if max_steps < 1:
+            steps_per_epoch = len(model.trainer.datamodule.train_dataloader())
+            max_epochs = model.trainer.max_epochs
+            max_steps = steps_per_epoch * max_epochs
+        logger.info(f"Success:  max_steps = {max_steps}")
+    except Exception as e:
+        logger.info(f"Failed to get max steps from the model trainer: {e}")
+        max_steps = 0
+    return max_steps
 
 
 def linear_warmup_cosine_decay(
@@ -14,8 +34,13 @@ def linear_warmup_cosine_decay(
     total_steps: int = 10000,
     final_factor: float = 5e-2,
     init_factor: float = 1e-5,
+    model: LightningModule | None = None,
 ) -> LambdaLR:
     """Return a scheduler with a linear warmup and a cosine decay."""
+    # Attempt to get the max steps from the model trainer
+    if total_steps == -1 and model is not None:
+        total_steps = get_max_steps(model)
+
     warmup_steps = max(1, warmup_steps)  # Avoid division by zero
     assert 0 < final_factor < 1, "Final factor must be less than 1"
     assert 0 < init_factor < 1, "Initial factor must be less than 1"

@@ -138,7 +138,7 @@ class JetGPT(LightningModule):
     def configure_optimizers(self) -> dict:
         params = filter(lambda p: p.requires_grad, self.parameters())
         opt = self.hparams.optimizer(params)
-        sched = self.hparams.scheduler(optimizer=opt)
+        sched = self.hparams.scheduler(optimizer=opt, model=self)
         return [opt], [{"scheduler": sched, "interval": "step"}]
 
     def on_validation_epoch_end(self) -> None:

@@ -7,6 +7,8 @@ import numpy as np
 @numba.jit(nopython=True)
 def d_ij(part_i: np.ndarray, part_j: np.ndarray, R: float) -> float:
     """Calculate the kt metric between two particles."""
+    if part_i[0] == 0 or part_j[0] == 0:
+        return 1e9
     ki = part_i[0] ** (-2)
     kj = part_j[0] ** (-2)
     deta = part_i[1] - part_j[1]
@@ -86,9 +88,15 @@ def _consider_updating_neighbour(
     csts: np.ndarray,
     R: float,
 ) -> None:
-    """Find all the particles that considered i as their neighbour and update them."""
+    """Consider updating all particle's neighbour information after i has changed."""
     for k in range(i):  # Can only consider i its neighbour if it comes before i
-        if n_idx[k] == i:
+        # Check if the distance to new i is smaller than the current distance
+        dist_i = d_ij(csts[i], csts[k], R)
+        if dist_i < dij[k]:
+            dij[k] = dist_i
+            n_idx[k] = i
+        # If it previously considered i as its neighbour then it also is updated
+        elif n_idx[k] == i:
             _update_neighbour(k, dij, n_idx, csts, R)
 
 

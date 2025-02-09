@@ -83,3 +83,4 @@ class CatchupToLR(BaseFinetuning):
 
         Overloaded from parent to prevent anything happening
         """
+        return

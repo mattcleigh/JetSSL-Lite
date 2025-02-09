@@ -7,7 +7,7 @@ lr_monitor:
   logging_interval: step
 
 backbone_finetune:
-  _target_: src.models.finetuning.CatchupToLR
+  _target_: src.callbacks.finetuning.CatchupToLR
   unfreeze_at_step: -1 # Never unfreeze
   catchup_steps: 1000
 

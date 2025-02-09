@@ -39,7 +39,7 @@ rule finetune:
         "callbacks=finetune",
         "callbacks.backbone_finetune.unfreeze_at_step=-1",
         "datamodule.batch_size=1000",
-        "full_resume=True", # Will autostart new if checkpoint is missing
+        # "full_resume=True", # Will autostart new if checkpoint is missing
         "trainer.max_epochs=1",
         f"project_name={project_name}",
         f"model.backbone_path={output_dir}/{project_name}/{{m_name}}/backbone.pkl",
@@ -59,11 +59,11 @@ rule pretrain:
         "scripts/train.py",
         "model={m_name}",
         "network_name={m_name}",
-        "full_resume=True", # Will autostart new if checkpoint is missing
+        # "full_resume=True", # Will autostart new if checkpoint is missing
         "trainer.max_epochs=5",
         f"project_name={project_name}",
-        lambda w : f"datamodule={'jetclass_tokens' if w.m_name == 'jetgpt' else 'jetclass_masked'}",
-        lambda w : "datamodule.batch_size=250" if w.m_name == "jetgpt" else "",
+        lambda w : f"datamodule={'jetclass_tokens' if w.m_name == 'gpt' else 'jetclass_masked'}",
+        lambda w : "datamodule.batch_size=250" if w.m_name == "gpt" else "",
     threads: 12
     resources:
         slurm_partition="shared-gpu,private-dpnc-gpu",

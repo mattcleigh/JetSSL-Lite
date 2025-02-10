@@ -6,7 +6,7 @@ defaults:
   - hydra: default
   - callbacks: pretrain
   - datamodule: jetclass_masked
-  - model: ssfm
+  - model: dino
   - experiment: null
 
 seed: 42 # For reproducibility

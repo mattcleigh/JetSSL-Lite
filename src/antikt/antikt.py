@@ -4,7 +4,7 @@ import numba
 import numpy as np
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def d_ij(part_i: np.ndarray, part_j: np.ndarray, R: float) -> float:
     """Calculate the kt metric between two particles."""
     ki = part_i[0] ** (-2)
@@ -15,7 +15,7 @@ def d_ij(part_i: np.ndarray, part_j: np.ndarray, R: float) -> float:
     return min(ki, kj) * delta2 / (R**2)
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def _combine(part_i: np.ndarray, part_j: np.ndarray) -> None:
     """Combine two particles into one."""
     px = part_i[0] * math.cos(part_i[2]) + part_j[0] * math.cos(part_j[2])
@@ -30,7 +30,7 @@ def _combine(part_i: np.ndarray, part_j: np.ndarray) -> None:
     part_i[2] = phi
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def build_dij(csts: np.ndarray, R: float) -> np.ndarray:
     N = csts.shape[0]
     dij = np.zeros((N, N), dtype=np.float64) + 1e9
@@ -42,7 +42,7 @@ def build_dij(csts: np.ndarray, R: float) -> np.ndarray:
     return dij
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def _update_dij(dij: np.ndarray, csts: np.ndarray, i: int, j: int, R: float) -> None:
     """Update the dij array after particle i absorbs particle j."""
     N = dij.shape[0]
@@ -56,19 +56,19 @@ def _update_dij(dij: np.ndarray, csts: np.ndarray, i: int, j: int, R: float) -> 
     dij[:, j] = 1e9
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def build_dib(csts: np.ndarray) -> np.ndarray:
     return csts[:, 0] ** (-2)
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def _update_dib(dib: np.ndarray, csts: np.ndarray, i: int, j: int) -> None:
     """Update the dib array after particle i absorbs particle j."""
     dib[i] = csts[i, 0] ** (-2)
     dib[j] = 1e9
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def min_2d(arr: np.ndarray) -> tuple:
     """Find the min of a 2D array, numpy unravel_index is not supported by numba."""
     min_val = 1e9
@@ -81,7 +81,7 @@ def min_2d(arr: np.ndarray) -> tuple:
     return min_val, min_idx
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def _cluster(
     csts: np.ndarray,
     jets: np.ndarray,
@@ -126,7 +126,7 @@ def _cluster(
     return jet_idx
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def antikt(x: np.ndarray, R: float) -> tuple:
     """Perform anti-kt clustering on a collection of particles.
 

@@ -5,14 +5,14 @@ verbose: false
 printshellcmds: true
 sdm: apptainer
 executor: slurm
-jobs: 200 # Maximum number of jobs to run in parallel
+jobs: 200 # Maximum number of jobs to run in parallel - all will be run eventually
 default-resources:
   slurm_account: golling
-  slurm_partition: shared-cpu,private-dpnc-cpu
-  runtime: 60 # minutes
-  mem_mb: 4000
+  slurm_partition: shared-gpu,private-dpnc-gpu
+  runtime: 720 # minutes
+  mem_mb: 20000
   threads: 12
-apptainer-args: >- # multi-line string
+apptainer-args: >-
   --nv
   --bind /srv,/home
   --cleanenv

@@ -4,7 +4,7 @@ import numba
 import numpy as np
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def d_ij(part_i: np.ndarray, part_j: np.ndarray, R: float) -> float:
     """Calculate the kt metric between two particles."""
     if part_i[0] == 0 or part_j[0] == 0:
@@ -17,7 +17,7 @@ def d_ij(part_i: np.ndarray, part_j: np.ndarray, R: float) -> float:
     return min(ki, kj) * delta2 / (R**2)
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def _combine(part_i: np.ndarray, part_j: np.ndarray) -> None:
     """Combine two particles into one."""
     px = part_i[0] * math.cos(part_i[2]) + part_j[0] * math.cos(part_j[2])
@@ -32,7 +32,7 @@ def _combine(part_i: np.ndarray, part_j: np.ndarray) -> None:
     part_i[2] = phi
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def build_dij(csts: np.ndarray, R: float) -> np.ndarray:
     N = csts.shape[0]
     dij = np.zeros((N, N), dtype=np.float64) + 1e9
@@ -44,7 +44,7 @@ def build_dij(csts: np.ndarray, R: float) -> np.ndarray:
     return dij
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def build_dij_arr(csts: np.ndarray, R: float) -> tuple:
     """Get the nearest neighbour and the distance to it for each particle."""
     N = csts.shape[0]
@@ -56,7 +56,7 @@ def build_dij_arr(csts: np.ndarray, R: float) -> tuple:
     return dij, n_idx
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def _update_neighbour(
     i: int,
     dij: np.ndarray,
@@ -80,7 +80,7 @@ def _update_neighbour(
                 n_idx[i] = j
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def _consider_updating_neighbour(
     i: int,
     dij: np.ndarray,
@@ -100,7 +100,7 @@ def _consider_updating_neighbour(
             _update_neighbour(k, dij, n_idx, csts, R)
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def _remove_particle(
     i: int,
     dib: np.ndarray,
@@ -116,7 +116,7 @@ def _remove_particle(
     _consider_updating_neighbour(i, dij, n_idx, csts, R)
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def _update_particle(
     i: int,
     dib: np.ndarray,
@@ -131,12 +131,12 @@ def _update_particle(
     _consider_updating_neighbour(i, dij, n_idx, csts, R)
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def build_dib(csts: np.ndarray) -> np.ndarray:
     return csts[:, 0] ** (-2)
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def _cluster(
     csts: np.ndarray,
     jets: np.ndarray,
@@ -178,7 +178,7 @@ def _cluster(
     return jet_idx
 
 
-@numba.jit(nopython=True)
+@numba.njit
 def antikt(x: np.ndarray, R: float) -> tuple:
     """Perform anti-kt clustering on a collection of particles.
 

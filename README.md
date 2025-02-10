@@ -7,7 +7,7 @@
 [![hydra](https://img.shields.io/badge/-Hydra-89b8cd?logo=hydra&logoColor=white)](https://hydra.cc/)
 [![wandb](https://img.shields.io/badge/-WandB-orange?logo=weightsandbiases&logoColor=white)](https://wandb.ai)
 
-<img src="resources/diagram.png" alt="" width="600"/> \
+<img src="resources/image.png" alt="" width="600"/> \
 <img src="https://github.com/user-attachments/assets/52ec394a-60e8-43d5-b0a4-662c02cae6c9" alt="" width="400"/>
 
 </div>

@@ -15,6 +15,7 @@ network_name: test # Used for both saving and wandb
 output_dir: /srv/beegfs/scratch/groups/rodem/jetssl-lite/ # Base output directory
 ckpt_path: null  # Checkpoint path to resume training
 weight_ckpt_path: null # Checkpoint path to load weights (but not optimizers etc)
+save_test_preds: False # After training, save test predictions to disk
 
 # Extra tweaks available with the new pytorch version
 precision: medium # Should use medium if on ampere gpus

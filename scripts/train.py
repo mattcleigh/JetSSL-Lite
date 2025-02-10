@@ -1,7 +1,9 @@
 """Basic training script."""
 
 import logging
+from pathlib import Path
 
+import h5py
 import hydra
 import lightning.pytorch as pl
 import rootutils
@@ -9,6 +11,7 @@ import torch as T
 from omegaconf import DictConfig
 
 root = rootutils.setup_root(search_from=__file__, pythonpath=True)
+cfg_path = str(root / "configs")
 
 from mltools.mltools.hydra_utils import (
     instantiate_collection,
@@ -17,14 +20,13 @@ from mltools.mltools.hydra_utils import (
     reload_original_config,
     save_config,
 )
+from mltools.mltools.torch_utils import to_np
 from mltools.mltools.utils import save_declaration
 
 log = logging.getLogger(__name__)
 
 
-@hydra.main(
-    version_base=None, config_path=str(root / "configs"), config_name="train.yaml"
-)
+@hydra.main(version_base=None, config_path=cfg_path, config_name="train.yaml")
 def main(cfg: DictConfig) -> None:
     """Main training script."""
     log.info("Setting up full job config")
@@ -84,6 +86,32 @@ def main(cfg: DictConfig) -> None:
     if trainer.state.status == "finished":
         log.info(" -- YES!! -- ")
         save_declaration()
+
+    if cfg.save_test_preds:
+        log.info("Running inference on test set")
+
+        log.info("Attempting to load best checkpoint")
+        ckpt_path = trainer.checkpoint_callback.best_model_path
+        if not ckpt_path:
+            log.warning("Best ckpt not found! Using current weights for testing...")
+            ckpt_path = None
+
+        log.info("Running inference on test set")
+        outputs = trainer.predict(
+            model=model, datamodule=datamodule, ckpt_path=ckpt_path
+        )
+
+        log.info("Combining predictions across dataset")
+        keys = list(outputs[0].keys())
+        score_dict = {k: T.vstack([o[k] for o in outputs]) for k in keys}
+
+        log.info("Saving outputs")
+        output_dir = Path(cfg.full_path, "outputs")
+        print(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        with h5py.File(output_dir / "test_set.h5", mode="w") as file:
+            for k in keys:
+                file.create_dataset(k, data=to_np(score_dict[k]))
 
 
 if __name__ == "__main__":

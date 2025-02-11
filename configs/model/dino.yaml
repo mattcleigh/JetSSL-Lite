@@ -1,7 +1,7 @@
 _target_: src.models.dino.JetDINO
 
 probe_every: 50
-ema_param_sync: 0.999
+ema_param_sync: 0.995
 s_temp: 0.1
 t_temp: 0.05
 embed_dim: 1024

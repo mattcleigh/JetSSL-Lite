@@ -38,7 +38,6 @@ Additionally, some models require [FlashAttention](https://github.com/Dao-AILab/
 ├── resources          # Preprocessors and discretisors
 ├── scripts            # All executable scripts other than data setup
 ├── workflow           # Workflow examples using snakemake
-├── hydra_cli          # A required directory for snakemake+hydra
 ├── pyproject.toml
 ├── README.md
 ├── requirements.txt
@@ -151,9 +150,9 @@ python scripts/train.py model=ssfm encoder_config.dim=64 decoder_config.dim=64
 
 The `workflow` directory contains a snakemake file that can be used to run an experiment containing multiple steps.
 - This is useful for example running the pretraining and then the finetuning command in sequence for many SSL models.
-- The current configuration is designed explicitly for the UNIGE HPC cluster and is intended to be an example only.
+- The current configuration is designed explicitly for the UNIGE HPC cluster and will need to be modified for other systems.
+- It uses SLURM as the executor plugin and requires an apptainer image to have been built.
 - Snakemake's updates are not backwards compatible, so specific versions are required to run the workflow.
-- The `hydra_cli` directory is required for snakemake to work with hydra.
 
 Install the required packages using:
 ```sh

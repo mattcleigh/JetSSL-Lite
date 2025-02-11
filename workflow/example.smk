@@ -48,6 +48,7 @@ rule pretrain:
     params:
         datamodule = lambda w : "jetclass_tokens" if w.m_name == "gpt" else "jetclass_masked",
         batch_size = lambda w : 250 if w.m_name == "gpt" else 1000,
+        max_epochs = lambda w : 1 if w.m_name == "gpt" else 2,
     resources:
         runtime=3 * 24 * 60,  # minutes
         slurm_extra = "--gres=gpu:1,VramPerGpu:20GB --constraint=COMPUTE_TYPE_AMPERE",
@@ -56,7 +57,7 @@ rule pretrain:
         python scripts/train.py \
         model={{wildcards.m_name}} \
         network_name={{wildcards.m_name}} \
-        trainer.max_epochs=2 \
+        trainer.max_epochs={{params.max_epochs}} \
         project_name={project_name} \
         datamodule={{params.datamodule}} \
         datamodule.batch_size={{params.batch_size}} \

@@ -7,7 +7,7 @@
 [![hydra](https://img.shields.io/badge/-Hydra-89b8cd?logo=hydra&logoColor=white)](https://hydra.cc/)
 [![wandb](https://img.shields.io/badge/-WandB-orange?logo=weightsandbiases&logoColor=white)](https://wandb.ai)
 
-<img src="resources/image.png" alt="" width="600"/> \
+<img src="resources/image.png" alt="" width="600"/> 
 
 ### JetClass Classification Score - Fixed Backbone
 24 hours SSL + 2 hours supervised

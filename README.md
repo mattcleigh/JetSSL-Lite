@@ -8,7 +8,13 @@
 [![wandb](https://img.shields.io/badge/-WandB-orange?logo=weightsandbiases&logoColor=white)](https://wandb.ai)
 
 <img src="resources/image.png" alt="" width="600"/> \
-<img src="https://github.com/user-attachments/assets/52ec394a-60e8-43d5-b0a4-662c02cae6c9" alt="" width="400"/>
+
+### JetClass Classification Score - Fixed Backbone
+24 hours SSL + 2 hours supervised
+  
+| SSFM    | MPM     | GPT     | DINO    | JEPA    |
+|---------|---------|---------|---------|---------|
+| 0.82937 | 0.81275 | 0.77454 | 0.61753 | 0.45025 |
 
 </div>
 

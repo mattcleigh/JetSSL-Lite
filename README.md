@@ -55,21 +55,24 @@ Additionally, some models require [FlashAttention](https://github.com/Dao-AILab/
 
 ## Installation
 
+To run this project clone and download the repository.
+
 This project relies on a custom submodule called `mltools` stored [here](https://gitlab.cern.ch/mleigh/mltools/-/tree/master) on CERN GitLab.
 This is a collection of useful functions, layers and networks for deep learning developed by the RODEM group at UNIGE.
-
 If you didn't clone the project with the `--recursive` flag you can pull the submodule using:
 
 ```
 git submodule update --init --recursive
 ```
 
-### Via Docker / Apptainer
+### Required Packages
+
+#### Docker / Apptainer
 
 This project is setup to use the CERN GitLab CI/CD to automatically build a Docker image based on the `docker/Dockerfile` and `requirements.txt` when a commit is pushed.
 The latest images can be found [here](https://gitlab.cern.ch/rodem/projects/jetssl-lite/container_registry).
 
-### Via Pip
+#### Via Pip
 
 To install the project locally, you can use the `requirements.txt` file to install the necessary packages.
 However, installing FlashAttention requires the packages ninja and packaging to already be installed!

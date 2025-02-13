@@ -26,7 +26,7 @@ class SetToSetFlowModelling(LightningModule):
         encoder_config: dict,
         decoder_config: dict,
         optimizer: partial,
-        scheduler: dict,
+        scheduler: partial,
         probe_head: partial,
         probe_every: int = 50,
     ) -> None:

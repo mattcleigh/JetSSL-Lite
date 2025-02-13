@@ -23,7 +23,7 @@ class JetGPT(LightningModule):
         embed_config: dict,
         encoder_config: dict,
         optimizer: partial,
-        scheduler: dict,
+        scheduler: partial,
         vocab_size: int,
         probe_head: partial,
         probe_every: int = 50,

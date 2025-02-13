@@ -1,5 +1,9 @@
+import logging
+
 from lightning.pytorch.callbacks import BaseFinetuning
 from torch import nn
+
+log = logging.getLogger(__name__)
 
 
 class CatchupToLR(BaseFinetuning):
@@ -25,7 +29,7 @@ class CatchupToLR(BaseFinetuning):
     def freeze_before_training(self, pl_module) -> None:
         """Prevent the backbone from training initially.
 
-        Called before `configure_optimizers`
+        Called before `configure_optimizers` by the parent's setup() method.
         """
         self.freeze(pl_module.backbone)
 
@@ -37,6 +41,7 @@ class CatchupToLR(BaseFinetuning):
 
         # Time to thaw, initial learning rate is negligable
         if self.frozen:
+            log.info("Unfreezing the backbone!")
             self.unfreeze_and_add_param_group(
                 pl_module.backbone,
                 optimizer,

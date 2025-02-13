@@ -31,7 +31,7 @@ class Classifier(LightningModule):
         backbone_path: str,
         class_head: partial,
         optimizer: partial,
-        scheduler: dict,
+        scheduler: partial,
     ) -> None:
         super().__init__()
         self.save_hyperparameters(logger=False)

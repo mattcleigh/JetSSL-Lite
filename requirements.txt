@@ -22,6 +22,7 @@ vector==1.6.0
 lz4==4.3.3
 xxhash==3.5.0
 numba==0.61.0
+fastjet==3.4.2.1
 
 # hydra / job configuration
 omegaconf==2.3.0

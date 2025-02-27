@@ -20,7 +20,7 @@ from mltools.mltools.hydra_utils import (
     reload_original_config,
     save_config,
 )
-from mltools.mltools.torch_utils import to_np
+from mltools.mltools.torch_utils import to_numpy
 from mltools.mltools.utils import save_declaration
 
 log = logging.getLogger(__name__)
@@ -111,7 +111,7 @@ def main(cfg: DictConfig) -> None:
         output_dir.mkdir(parents=True, exist_ok=True)
         with h5py.File(output_dir / "test_set.h5", mode="w") as file:
             for k in keys:
-                file.create_dataset(k, data=to_np(score_dict[k]))
+                file.create_dataset(k, data=to_numpy(score_dict[k]))
 
 
 if __name__ == "__main__":
